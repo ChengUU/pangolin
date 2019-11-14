@@ -2,13 +2,18 @@ package com.mcoding.pangolin.client.handler;
 
 import com.google.protobuf.ByteString;
 import com.mcoding.pangolin.common.constant.Constants;
+import com.mcoding.pangolin.common.entity.AddressInfo;
+import com.mcoding.pangolin.common.util.ChannelAddressUtils;
+import com.mcoding.pangolin.common.util.DateTimeKit;
 import com.mcoding.pangolin.protocol.MessageType;
 import com.mcoding.pangolin.protocol.PMessageOuterClass;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,9 +39,18 @@ public class HeartBeatHandler extends IdleStateHandler {
                     .setType(MessageType.HEART_BEAT)
                     .setData(ByteString.copyFrom("I still living ^_^".getBytes()))
                     .build();
+            Channel channel=ctx.channel();
+            AddressInfo addressInfo=ChannelAddressUtils.buildAddressInfo(channel);
+            channel.writeAndFlush(heartBeatMsg);
 
-            ctx.channel().writeAndFlush(heartBeatMsg);
-            log.info("EVENT=发送心跳包|CHANNEL={}|MSG={}",ctx.channel(), heartBeatMsg.getData().toStringUtf8());
+            log.info("{}:{}-{}:{}|EVENT=发送心跳包|CHANNEL={}|MSG={}|timestamp={}",
+                    addressInfo.getLocalIp(),
+                    addressInfo.getLocalPort(),
+                    addressInfo.getRemoteIp(),
+                    addressInfo.getRemotePort(),
+                    channel,
+                    heartBeatMsg.getData().toStringUtf8(),
+                    DateTimeKit.date());
         } else if (IdleStateEvent.READER_IDLE_STATE_EVENT == evt) {
             log.warn("EVENT=读超时，关闭管道{}", ctx.channel());
             ctx.channel().close();

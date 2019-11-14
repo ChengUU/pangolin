@@ -16,17 +16,19 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ServerIdleStateHandler extends IdleStateHandler {
 
-    private static final int READ_IDLE_TIME = 15;
+    /** 通道状态检测-读：120秒 */
+    private static final long READ_IDLE_TIME = 120;
 
     public ServerIdleStateHandler() {
-        super(READ_IDLE_TIME, 0, 0, TimeUnit.MINUTES);
+        super(READ_IDLE_TIME, 0, 0, TimeUnit.SECONDS);
     }
 
     @Override
     protected void channelIdle(ChannelHandlerContext ctx, IdleStateEvent evt) {
-
-        log.error("EVENT=连接空闲检测|DESC=连接超过一个小时没有读取到数据, 关闭连接");
-        ctx.channel().close();
+        if(IdleStateEvent.READER_IDLE_STATE_EVENT==evt) {
+            log.error("EVENT=连接空闲检测|DESC=连接超过{}秒没有读取到数据, 关闭连接",READ_IDLE_TIME);
+            ctx.channel().close();
+        }
     }
 
 }

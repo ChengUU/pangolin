@@ -1,6 +1,10 @@
 package com.mcoding.pangolin.server.handler;
 
 import com.mcoding.pangolin.common.codec.HeartBeatPacket;
+import com.mcoding.pangolin.common.entity.AddressInfo;
+import com.mcoding.pangolin.common.util.ChannelAddressUtils;
+import com.mcoding.pangolin.common.util.DateTimeKit;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -20,7 +24,14 @@ public class IntranetHeartBeatResponseHandler extends SimpleChannelInboundHandle
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HeartBeatPacket packet) {
-        log.info("EVENT=收到心跳包|MSG={}", new String(packet.getData()));
+        Channel channel=ctx.channel();
+        AddressInfo addressInfo= ChannelAddressUtils.buildAddressInfo(channel);
+        log.info("{}:{}-{}:{}|EVENT=收到心跳包|MSG={}|timestamp={}", addressInfo.getRemoteIp(),
+                addressInfo.getRemotePort(),
+                addressInfo.getLocalIp(),
+                addressInfo.getLocalPort(),
+                new String(packet.getData()),
+                DateTimeKit.date());
     }
 
 }

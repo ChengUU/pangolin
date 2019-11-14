@@ -29,6 +29,8 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 public class ClientContainer implements ChannelStatusListener, LifeCycle {
+    /** 每100秒发送一个心跳包 */
+    private static final int HEART_BEAT_WRITE_TIME=15;
 
     private AddressBridgeInfo addressBridgeInfo;
     private Bootstrap intranetProxyClientBootstrap;
@@ -58,6 +60,7 @@ public class ClientContainer implements ChannelStatusListener, LifeCycle {
             @Override
             public void initChannel(SocketChannel ch) {
                 ch.pipeline().addLast(TargetServerChannelHandler.INSTANCE);
+                ch.pipeline().addLast(new HeartBeatHandler(0,HEART_BEAT_WRITE_TIME , 0, TimeUnit.SECONDS));
             }
         });
 
@@ -70,7 +73,7 @@ public class ClientContainer implements ChannelStatusListener, LifeCycle {
             @Override
             public void initChannel(SocketChannel ch) {
                 ChannelPipeline pipeline = ch.pipeline();
-                pipeline.addLast(new HeartBeatHandler(0, 15, 0, TimeUnit.MINUTES));
+                pipeline.addLast(new HeartBeatHandler(0, HEART_BEAT_WRITE_TIME, 0, TimeUnit.SECONDS));
                 pipeline.addLast(new ProtobufVarint32FrameDecoder());
                 pipeline.addLast(new ProtobufDecoder(PMessageOuterClass.PMessage.getDefaultInstance()));
                 pipeline.addLast(new ProtobufVarint32LengthFieldPrepender());
